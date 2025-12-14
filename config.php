@@ -113,4 +113,32 @@ function resetLoginAttempts($email) {
     unset($_SESSION['login_attempts'][$email]);
     unset($_SESSION['login_attempt_time'][$email]);
 }
+
+// Helper function to log audit events
+function logAuditEvent($conn, $action, $description = null) {
+    if (!isset($_SESSION['user_id'])) {
+        return;
+    }
+    
+    try {
+        $stmt = $conn->prepare("
+            INSERT INTO audit_logs (user_id, action, description, ip_address, user_agent) 
+            VALUES (?, ?, ?, ?, ?)
+        ");
+        
+        $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        
+        $stmt->execute([
+            $_SESSION['user_id'],
+            $action,
+            $description,
+            $ip,
+            $user_agent
+        ]);
+    } catch (PDOException $e) {
+        // Silently fail - don't break the app if logging fails
+        error_log("Audit log failed: " . $e->getMessage());
+    }
+}
 ?>
