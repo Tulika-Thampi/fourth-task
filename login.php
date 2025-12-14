@@ -50,6 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['username'] = $user['username'];
                         $_SESSION['email'] = $user['email'];
                         $_SESSION['user_role'] = $user['role'];
+
+                        // After setting session variables
+                        logAuditEvent($conn, 'user_login', "User {$user['username']} logged in");
                         
                         redirect('index.php');
                     } else {
